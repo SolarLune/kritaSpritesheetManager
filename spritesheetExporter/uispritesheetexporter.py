@@ -44,8 +44,13 @@ class UISpritesheetExporter(object):
 
         self.topLayout = QVBoxLayout()
 
+        self.autoName = QCheckBox()
+        self.autoName.setChecked(True)
+        self.autoName.stateChanged.connect(self.toggleAutoName)
+
         # the user should choose the export name of the final spritesheet
         self.exportName = QLineEdit()
+        self.exportName.setEnabled(False)
 
         # and the export directory
         self.exportDirTx = QLineEdit()
@@ -164,6 +169,10 @@ class UISpritesheetExporter(object):
     def initialize_export(self):
         # putting stuff in boxes
         # and boxes in bigger boxes
+        self.addDescribedWidget(parent=self.topLayout, listWidgets=[
+            describedWidget(
+                widget=self.autoName,
+                descri="Automatically name exported spritesheet file:")])
         self.exportName.setText(self.exp.exportName)
         self.addDescribedWidget(parent=self.topLayout, listWidgets=[
             describedWidget(
@@ -335,6 +344,12 @@ class UISpritesheetExporter(object):
         if triggered.isChecked() == trigger.isChecked():
             triggered.setChecked(not trigger.isChecked())
 
+    def toggleAutoName(self):
+        if self.autoName.isChecked():
+            self.exportName.setEnabled(False)
+        else:
+            self.exportName.setEnabled(True)
+
     def toggleHideable(self):
         if self.customSettings.isChecked():
             self.hideableWidget.show()
@@ -395,6 +410,13 @@ class UISpritesheetExporter(object):
         self.mainDialog.setDisabled(True)
 
         self.exp.exportName = self.exportName.text().split('.')[0]
+
+        if self.autoName.isChecked():
+            fn = self.doc.fileName()
+            # The document filepath could be empty if the document is unsaved, so we check for this
+            if fn != "":
+                self.exp.exportName = Path(fn).name.split('.')[0]
+
         self.exp.exportDir = Path(self.exportPath)
         self.exp.layersAsAnimation = self.layersAsAnimation.isChecked()
         self.exp.writeTextureAtlas = self.writeTextureAtlas.isChecked()
